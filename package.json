@@ -1,0 +1,12 @@
+{
+  "name": "dao-governance-copilot",
+  "version": "0.1.0",
+  "description": "AI copilot for DAO governance: proposal analysis, voting insights, delegate tracking",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run",
+    "lint": "eslint src tests --ext .ts"
+  },
+  "license": "MIT"
+}
