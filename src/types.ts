@@ -74,6 +74,11 @@ export interface DelegateProfile {
   reasonRate: number;
   /** Share of votes matching the winning choice, 0–1 (null if no votes). */
   winAlignment: number | null;
+  /**
+   * Mean share of the voting window elapsed when voting, 0 (opened voting)
+   * to 1 (voted at the last minute). Null when unmeasurable.
+   */
+  avgLatencyShare?: number | null;
 }
 
 /** One flagged risk on a proposal analysis. */
