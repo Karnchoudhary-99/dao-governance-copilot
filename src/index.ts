@@ -1,3 +1,8 @@
 // dao-governance-copilot: AI copilot for DAO governance.
-// Entry point — proposal analysis, voting insights, delegate tracking.
-export {};
+// Public API surface — proposal analysis, voting insights, delegate tracking.
+
+export * from "./types.js";
+export * from "./ingest.js";
+export * from "./summarize.js";
+export * from "./risks.js";
+export * from "./analyze.js";
