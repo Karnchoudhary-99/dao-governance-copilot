@@ -23,6 +23,12 @@ node dist/cli.js analyze examples/proposal-upgrade.json --votes examples/proposa
 # analyze a whole directory of proposals
 node dist/cli.js analyze-dir examples
 
+# delegate leaderboard over a set of proposals (+ their <id>.votes.json files)
+node dist/cli.js delegates examples --top 5
+
+# governance digest: votes closing soon + fresh proposals
+node dist/cli.js digest examples --closing-within 48 --new-within 72
+
 # generate deterministic demo fixtures (with --votes, also emits <id>.votes.json)
 node dist/cli.js fixtures /tmp/proposals --count 5 --seed 42 --votes
 
@@ -59,6 +65,38 @@ introduces batched settlement and reduces gas costs. ...
   for the upgrade.
 ```
 
+## Delegate tracking
+
+Given a directory of proposals (each optionally paired with an
+`<id>.votes.json` ballot file), the copilot builds per-delegate scorecards:
+
+- **Participation** — share of votable proposals (`active`, `closed`,
+  `executed`) the delegate actually voted on. One ballot counts per
+  proposal; when a voter ballots twice, the latest vote wins.
+- **Reason rate** — share of ballots carrying a written rationale.
+- **Win alignment** — share of votes matching the winning choice.
+- **Punctuality** — how early in the voting window the delegate votes.
+
+Scorecards combine these into a 0–100 composite score (participation 45%,
+punctuality 25%, reasons 15%, alignment 15%) with an A–F letter grade,
+rendered as a leaderboard table plus a per-delegate markdown report.
+
+```bash
+node dist/cli.js delegates ./proposals --top 5
+```
+
+## Notification digests
+
+`copilot digest` builds a ready-to-send briefing from a proposals directory:
+active votes closing within the window (default 48 h) and newly created
+proposals (default 72 h), sorted by urgency with quorum progress and risk
+flags attached — so a scheduled digest always shows delegates what needs
+their attention right now.
+
+```bash
+node dist/cli.js digest ./proposals --closing-within 24 --new-within 48
+```
+
 ## Library usage
 
 ```ts
@@ -74,8 +112,8 @@ console.log(renderReport(analysis));
 - [x] Proposal ingestion (JSON files + deterministic fixtures)
 - [x] Proposal summarisation + risk flags
 - [x] Voting-power and quorum analytics
-- [ ] Delegate tracking and scorecards
-- [ ] Notification digests (new proposals, closing votes)
+- [x] Delegate tracking and scorecards
+- [x] Notification digests (new proposals, closing votes)
 - [ ] Snapshot / Tally / on-chain data adapters
 - [x] Tests + docs + MIT license
 
@@ -88,6 +126,10 @@ console.log(renderReport(analysis));
 - `src/analyze.ts` — analysis pipeline + markdown report renderer
 - `src/analytics.ts` — voting analytics: quorum projection, Gini/Nakamoto
   concentration, outcome margin + flip power
+- `src/delegates.ts` — delegate tracking: profiles, composite scores +
+  grades, leaderboard and scorecard rendering
+- `src/digests.ts` — notification digests: closing/new proposals, urgency
+  ordering, markdown rendering
 - `src/cli.ts` — `copilot` command-line interface
 - `tests/` — vitest suite
 - `examples/` — sample proposal JSON files

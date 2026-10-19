@@ -2,10 +2,11 @@ import { describe, expect, it } from "vitest";
 import {
   generateFixtureVotes,
   generateFixtures,
+  loadProposalsFromDir,
   loadVotesFromFile,
   validateProposal,
 } from "../src/ingest.js";
-import { writeFileSync } from "node:fs";
+import { mkdirSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
@@ -143,5 +144,18 @@ describe("generateFixtureVotes", () => {
     const path = join(tmpdir(), `votes-${Date.now()}.json`);
     writeFileSync(path, JSON.stringify({ votes }));
     expect(loadVotesFromFile(path)).toHaveLength(votes.length);
+  });
+});
+
+describe("loadProposalsFromDir", () => {
+  it("loads proposals while ignoring sibling .votes.json files", () => {
+    const dir = join(tmpdir(), `proposals-${Date.now()}`);
+    mkdirSync(dir, { recursive: true });
+    const proposal = { ...base, id: "p1" };
+    writeFileSync(join(dir, "p1.json"), JSON.stringify(proposal));
+    writeFileSync(join(dir, "p1.votes.json"), JSON.stringify({ votes: [] }));
+    const loaded = loadProposalsFromDir(dir);
+    expect(loaded).toHaveLength(1);
+    expect(loaded[0].id).toBe("p1");
   });
 });

@@ -9,6 +9,14 @@ import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { analyzeProposal, renderReport } from "./analyze.js";
 import {
+  buildDelegateProfiles,
+  renderLeaderboard,
+  renderScorecard,
+  scoreDelegates,
+  VotesByProposal,
+} from "./delegates.js";
+import { buildDigestItems, renderDigest } from "./digests.js";
+import {
   generateFixtureVotes,
   generateFixtures,
   loadProposalsFromDir,
@@ -22,6 +30,8 @@ function usage(): never {
       "Usage:",
       "  copilot analyze <proposal.json> [--votes <votes.json>] [--json]",
       "  copilot analyze-dir <proposals-dir> [--json]",
+      "  copilot delegates <proposals-dir> [--votes-dir <dir>] [--top N]",
+      "  copilot digest <proposals-dir> [--closing-within <hours>] [--new-within <hours>] [--json]",
       "  copilot fixtures <out-dir> [--count N] [--seed S] [--votes]",
     ].join("\n"),
   );
@@ -65,6 +75,56 @@ async function main(): Promise<void> {
         console.log(renderReport(analysis));
         console.log("---");
       }
+    }
+    return;
+  }
+
+  if (cmd === "delegates") {
+    const votesDir = getArg("--votes-dir") ?? target;
+    const top = Number(getArg("--top") ?? "10");
+    const proposals = loadProposalsFromDir(target);
+    if (proposals.length === 0) {
+      console.error(`no .json proposals found in ${target}`);
+      process.exit(1);
+    }
+    // Votes live next to proposals by default: <proposal-id>.votes.json.
+    const votesByProposal: VotesByProposal = {};
+    for (const p of proposals) {
+      try {
+        votesByProposal[p.id] = loadVotesFromFile(join(votesDir, `${p.id}.votes.json`));
+      } catch {
+        // No ballots on file for this proposal — it still counts toward
+        // the participation denominator.
+      }
+    }
+    const profiles = buildDelegateProfiles(proposals, votesByProposal);
+    const cards = scoreDelegates(profiles);
+    console.log(`# Delegate report — ${proposals.length} proposals in window`);
+    console.log(``);
+    console.log(renderLeaderboard(cards, top));
+    for (const card of cards.slice(0, top)) {
+      console.log(``);
+      console.log(renderScorecard(card));
+    }
+    return;
+  }
+
+  if (cmd === "digest") {
+    const closingWithin = Number(getArg("--closing-within") ?? "48");
+    const newWithin = Number(getArg("--new-within") ?? "72");
+    const proposals = loadProposalsFromDir(target);
+    if (proposals.length === 0) {
+      console.error(`no .json proposals found in ${target}`);
+      process.exit(1);
+    }
+    const items = buildDigestItems(proposals, {
+      closingWithinHours: closingWithin,
+      newWithinHours: newWithin,
+    });
+    if (process.argv.includes("--json")) {
+      console.log(JSON.stringify(items, null, 2));
+    } else {
+      console.log(renderDigest(items));
     }
     return;
   }
