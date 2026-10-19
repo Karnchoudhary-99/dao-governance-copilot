@@ -9,3 +9,6 @@ export * from "./analyze.js";
 export * from "./analytics.js";
 export * from "./delegates.js";
 export * from "./digests.js";
+export * from "./adapters.js";
+export * from "./adapters-snapshot.js";
+export * from "./adapters-tally.js";

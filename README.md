@@ -32,6 +32,12 @@ node dist/cli.js digest examples --closing-within 48 --new-within 72
 # generate deterministic demo fixtures (with --votes, also emits <id>.votes.json)
 node dist/cli.js fixtures /tmp/proposals --count 5 --seed 42 --votes
 
+# pull LIVE proposals from a Snapshot space (no key needed)
+node dist/cli.js fetch --source snapshot --dao wpay.eth --limit 5 --votes-limit 50 --out ./fetched
+
+# pull on-chain Governor proposals from Tally (needs TALLY_API_KEY env var)
+TALLY_API_KEY=xxx node dist/cli.js fetch --source tally --dao eip155:1:0xGovernorAddress --limit 5 --out ./fetched
+
 # run the test suite
 npm test
 ```
@@ -48,6 +54,37 @@ analytics** section:
   top-1/top-5 voter power shares, flagging whale-dominated votes.
 - **Outcome** — current leader, runner-up margin, and the voting power the
   runner-up would need to flip the result.
+
+## Live data adapters
+
+The whole pipeline can run on real DAO data, not just fixtures.
+`src/adapters.ts` holds the shared GraphQL transport (timeout, error
+surfacing, page-through helper) plus a `ProposalFetcher` interface; the
+per-source adapters are:
+
+- **Snapshot** (`src/adapters-snapshot.ts`) — the public offchain hub
+  GraphQL API (`https://hub.snapshot.org/graphql`), no API key needed.
+  Query field names were verified against a live hub response; weighted
+  ballots are reduced to their dominant choice, and the hub's missing
+  quorum field is mapped to `0` so quorum progress reports 0% instead of a
+  misleading ratio.
+- **Tally** (`src/adapters-tally.ts`) — on-chain Governor data via
+  `https://api.tally.xyz/query`, authenticated with an API key in the
+  `Api-Key` header (`TALLY_API_KEY` env var). Tally lifecycle statuses and
+  OZ support values (`FOR`/`AGAINST`/`ABSTAIN`) are normalized onto the
+  copilot's states and For=1/Against=2/Abstain=3 choices.
+
+`copilot fetch` writes each proposal as `<id>.json` plus an optional
+`<id>.votes.json` in the same shape as the fixtures, so every other
+command (`analyze`, `delegates`, `digest`) works on fetched data unchanged:
+
+```bash
+node dist/cli.js fetch --source snapshot --dao wpay.eth --limit 5 --votes-limit 50 --out ./fetched
+node dist/cli.js analyze-dir ./fetched   # proposals + votes picked up automatically
+```
+
+Verified end-to-end against the live hub: fetched a real WPAY proposal
+plus ballots, then ran it through `analyze` above.
 
 ## Sample output
 
@@ -114,7 +151,7 @@ console.log(renderReport(analysis));
 - [x] Voting-power and quorum analytics
 - [x] Delegate tracking and scorecards
 - [x] Notification digests (new proposals, closing votes)
-- [ ] Snapshot / Tally / on-chain data adapters
+- [x] Snapshot / Tally / on-chain data adapters
 - [x] Tests + docs + MIT license
 
 ## Project layout
@@ -130,6 +167,12 @@ console.log(renderReport(analysis));
   grades, leaderboard and scorecard rendering
 - `src/digests.ts` — notification digests: closing/new proposals, urgency
   ordering, markdown rendering
+- `src/adapters.ts` — live-data core: GraphQL transport, `AdapterError`,
+  pagination helper, `ProposalFetcher` interface
+- `src/adapters-snapshot.ts` — Snapshot hub adapter (field mapping verified
+  against the live API)
+- `src/adapters-tally.ts` — Tally adapter (Api-Key auth, status/support
+  normalization)
 - `src/cli.ts` — `copilot` command-line interface
 - `tests/` — vitest suite
 - `examples/` — sample proposal JSON files

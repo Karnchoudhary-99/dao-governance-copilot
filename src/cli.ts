@@ -4,9 +4,14 @@
  *
  *   copilot analyze <proposal.json> [--votes votes.json] [--json]
  *   copilot fixtures <out-dir> [--count N] [--seed S]
+ *   copilot fetch --source snapshot|tally --dao <space|governor-id> [--limit N]
+ *     [--votes-limit N] [--out <dir>] [--chain-ids 1,10]
  */
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
+import type { ProposalFetcher } from "./adapters.js";
+import { TALLY_API_KEY_ENV, TallyAdapter } from "./adapters-tally.js";
+import { SnapshotAdapter } from "./adapters-snapshot.js";
 import { analyzeProposal, renderReport } from "./analyze.js";
 import {
   buildDelegateProfiles,
@@ -33,6 +38,8 @@ function usage(): never {
       "  copilot delegates <proposals-dir> [--votes-dir <dir>] [--top N]",
       "  copilot digest <proposals-dir> [--closing-within <hours>] [--new-within <hours>] [--json]",
       "  copilot fixtures <out-dir> [--count N] [--seed S] [--votes]",
+      "  copilot fetch --source snapshot|tally --dao <space|governor-id> [--limit N]",
+      "    [--votes-limit N] [--out <dir>] [--chain-ids 1,10]",
     ].join("\n"),
   );
   process.exit(2);
@@ -145,6 +152,54 @@ async function main(): Promise<void> {
       }
     }
     console.log(`wrote ${count} fixtures to ${target}${withVotes ? " (with votes)" : ""}`);
+    return;
+  }
+
+  if (cmd === "fetch") {
+    const source = getArg("--source") ?? "snapshot";
+    const dao = getArg("--dao");
+    if (!dao) {
+      console.error("fetch needs --dao <snapshot space | tally governor id>");
+      process.exit(1);
+    }
+    const limit = Number(getArg("--limit") ?? "20");
+    const votesLimit = Number(getArg("--votes-limit") ?? "0");
+    const out = getArg("--out") ?? "./fetched";
+    const chainIds = (getArg("--chain-ids") ?? "1")
+      .split(",")
+      .map((s) => Number(s.trim()))
+      .filter((n) => Number.isFinite(n));
+    let fetcher: ProposalFetcher;
+    if (source === "snapshot") {
+      fetcher = new SnapshotAdapter();
+    } else if (source === "tally") {
+      fetcher = new TallyAdapter(process.env[TALLY_API_KEY_ENV]);
+    } else {
+      console.error(`unknown source: ${source} (expected snapshot|tally)`);
+      process.exit(1);
+    }
+    mkdirSync(out, { recursive: true });
+    // File names must survive ids like "eip155:1:0xgov:42".
+    const safeName = (id: string): string => id.replace(/[^\w.-]/g, "_");
+    const proposals = await fetcher.listProposals(dao, { limit, chainIds });
+    for (const p of proposals) {
+      const base = join(out, safeName(p.id));
+      writeFileSync(`${base}.json`, JSON.stringify(p, null, 2) + "\n");
+      if (votesLimit > 0) {
+        const votes = await fetcher.listVotes(p.id, {
+          limit: votesLimit,
+          governorId: dao, // Tally scopes proposal ids per governor
+        });
+        writeFileSync(
+          `${base}.votes.json`,
+          JSON.stringify({ votes }, null, 2) + "\n",
+        );
+      }
+    }
+    console.log(
+      `fetched ${proposals.length} proposals from ${source} into ${out}` +
+        (votesLimit > 0 ? " (with votes)" : ""),
+    );
     return;
   }
 
