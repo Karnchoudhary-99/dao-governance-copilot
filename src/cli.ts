@@ -9,6 +9,7 @@ import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { analyzeProposal, renderReport } from "./analyze.js";
 import {
+  generateFixtureVotes,
   generateFixtures,
   loadProposalsFromDir,
   loadVotesFromFile,
@@ -21,7 +22,7 @@ function usage(): never {
       "Usage:",
       "  copilot analyze <proposal.json> [--votes <votes.json>] [--json]",
       "  copilot analyze-dir <proposals-dir> [--json]",
-      "  copilot fixtures <out-dir> [--count N] [--seed S]",
+      "  copilot fixtures <out-dir> [--count N] [--seed S] [--votes]",
     ].join("\n"),
   );
   process.exit(2);
@@ -71,11 +72,19 @@ async function main(): Promise<void> {
   if (cmd === "fixtures") {
     const count = Number(getArg("--count") ?? "3");
     const seed = Number(getArg("--seed") ?? "42");
+    const withVotes = process.argv.includes("--votes");
     mkdirSync(target, { recursive: true });
     for (const p of generateFixtures(count, seed)) {
       writeFileSync(join(target, `${p.id}.json`), JSON.stringify(p, null, 2) + "\n");
+      if (withVotes) {
+        const votes = generateFixtureVotes(p, seed);
+        writeFileSync(
+          join(target, `${p.id}.votes.json`),
+          JSON.stringify({ votes }, null, 2) + "\n",
+        );
+      }
     }
-    console.log(`wrote ${count} fixtures to ${target}`);
+    console.log(`wrote ${count} fixtures to ${target}${withVotes ? " (with votes)" : ""}`);
     return;
   }
 
