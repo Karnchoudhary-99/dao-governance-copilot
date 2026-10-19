@@ -3,22 +3,76 @@
 AI copilot for DAO governance: proposal analysis, voting insights, and
 delegate tracking. Built in TypeScript.
 
-## Roadmap
+Given a governance proposal, the copilot produces a structured report —
+extractive summary, keyword extraction, heuristic risk flags (treasury
+transfers, unaudited upgrades, quorum risk, whale dominance), quorum
+progress and the leading choice — as a library call or a CLI command.
 
-- [ ] Proposal ingestion (Snapshot / Tally / on-chain)
-- [ ] Proposal summarisation + risk flags
-- [ ] Voting-power and quorum analytics
-- [ ] Delegate tracking and scorecards
-- [ ] Notification digests (new proposals, closing votes)
-- [ ] Tests + docs + MIT license
-
-## Build
+## Quick start
 
 ```bash
 npm install
 npm run build
+
+# analyze one proposal file
+node dist/cli.js analyze examples/proposal-treasury.json
+
+# analyze a whole directory of proposals
+node dist/cli.js analyze-dir examples
+
+# generate deterministic demo fixtures
+node dist/cli.js fixtures /tmp/proposals --count 5 --seed 42
+
+# run the test suite
 npm test
 ```
+
+## Sample output
+
+```
+# Upgrade core contracts to v2.4 — batched settlement
+
+## Summary
+We propose upgrading the protocol's core contracts to v2.4, which
+introduces batched settlement and reduces gas costs. ...
+
+## Risk flags (2)
+- [CRITICAL] `unaudited-upgrade` — Contract upgrade proposed with no
+  audit or security review mentioned.
+- [WARNING] `no-timelock` — No timelock or execution delay mentioned
+  for the upgrade.
+```
+
+## Library usage
+
+```ts
+import { analyzeProposal, loadProposalsFromDir, renderReport } from "dao-governance-copilot";
+
+const [proposal] = loadProposalsFromDir("./proposals");
+const analysis = analyzeProposal(proposal);
+console.log(renderReport(analysis));
+```
+
+## Roadmap
+
+- [x] Proposal ingestion (JSON files + deterministic fixtures)
+- [x] Proposal summarisation + risk flags
+- [ ] Voting-power and quorum analytics
+- [ ] Delegate tracking and scorecards
+- [ ] Notification digests (new proposals, closing votes)
+- [ ] Snapshot / Tally / on-chain data adapters
+- [x] Tests + docs + MIT license
+
+## Project layout
+
+- `src/types.ts` — governance domain types
+- `src/ingest.ts` — JSON validation, vote loading, fixture generator
+- `src/summarize.ts` — extractive summarizer + keyword extraction
+- `src/risks.ts` — proposal risk-flag heuristics
+- `src/analyze.ts` — analysis pipeline + markdown report renderer
+- `src/cli.ts` — `copilot` command-line interface
+- `tests/` — vitest suite
+- `examples/` — sample proposal JSON files
 
 ## License
 
