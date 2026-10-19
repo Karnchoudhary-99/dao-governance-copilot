@@ -127,7 +127,14 @@ export function loadVotesFromFile(path: string): Vote[] {
     ) {
       throw new Error(`votes[${i}] has an invalid shape`);
     }
-    return v as Vote;
+    const vote: Vote = {
+      voter: v.voter,
+      choice: v.choice,
+      votingPower: v.votingPower,
+      createdAt: v.createdAt,
+      ...(typeof v.reason === "string" ? { reason: v.reason } : {}),
+    };
+    return vote;
   });
 }
 
