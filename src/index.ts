@@ -6,3 +6,4 @@ export * from "./ingest.js";
 export * from "./summarize.js";
 export * from "./risks.js";
 export * from "./analyze.js";
+export * from "./analytics.js";
