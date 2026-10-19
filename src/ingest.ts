@@ -105,7 +105,9 @@ export function validateProposal(raw: unknown): Proposal {
 
 /** Load and validate every `*.json` proposal file in a directory. */
 export function loadProposalsFromDir(dir: string): Proposal[] {
-  const files = readdirSync(dir).filter((f) => f.endsWith(".json")).sort();
+  const files = readdirSync(dir)
+    .filter((f) => f.endsWith(".json") && !f.endsWith(".votes.json"))
+    .sort();
   return files.map((f) => {
     const raw = JSON.parse(readFileSync(join(dir, f), "utf8"));
     return validateProposal(raw);
