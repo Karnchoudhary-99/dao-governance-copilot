@@ -5,6 +5,7 @@
  */
 import { flagRisks } from "./risks.js";
 import { summarize } from "./summarize.js";
+import { analyzeVotes, VoteAnalytics } from "./analytics.js";
 import { Proposal, ProposalAnalysis, Vote, parseAmount } from "./types.js";
 
 /** Aggregate votes per choice index; also returns the grand total. */
@@ -55,6 +56,23 @@ export function analyzeProposal(p: Proposal, votes: Vote[] = []): ProposalAnalys
     }
   }
 
+  const generatedAt = Math.floor(Date.now() / 1000);
+
+  // Vote-level analytics need the raw ballot list (on-chain scores alone
+  // can't show concentration or trajectory).
+  let analytics: VoteAnalytics | null = null;
+  if (votes.length > 0) {
+    const labels = new Map(p.choices.map((c) => [c.index, c.label]));
+    analytics = analyzeVotes(votes, {
+      quorum,
+      start: p.start,
+      end: p.end,
+      now: generatedAt,
+      perChoice,
+      labels,
+    });
+  }
+
   return {
     proposalId: p.id,
     title: p.title,
@@ -63,13 +81,18 @@ export function analyzeProposal(p: Proposal, votes: Vote[] = []): ProposalAnalys
     totalVotes: String(Math.round(total)),
     quorumProgress,
     leadingChoice,
-    generatedAt: Math.floor(Date.now() / 1000),
+    analytics,
+    generatedAt,
   };
 }
 
+/** Format a 0–1 fraction as a percentage string. */
+function fmtPct(x: number): string {
+  return `${(x * 100).toFixed(1)}%`;
+}
+
 /** Render an analysis as a human-readable markdown report. */
-export function renderReport(a: ProposalAnalysis): string {
-  const lines: string[] = [];
+export function renderReport(a: ProposalAnalysis): string {  const lines: string[] = [];
   lines.push(`# ${a.title}`);
   lines.push(``);
   lines.push(`**Proposal:** \`${a.proposalId}\``);
@@ -88,6 +111,46 @@ export function renderReport(a: ProposalAnalysis): string {
   lines.push(`- Quorum progress: ${(a.quorumProgress * 100).toFixed(1)}%`);
   lines.push(`- Leading: ${a.leadingChoice ?? "none yet"}`);
   lines.push(``);
+
+  if (a.analytics) {
+    const an = a.analytics;
+    lines.push(`## Voting analytics`);
+    lines.push(``);
+    lines.push(
+      `- Quorum: ${an.quorum.met ? "MET" : "not met"} ` +
+        `(${fmtPct(an.quorum.progress)} of ${Math.round(an.quorum.quorum)} required, ` +
+        `${Math.round(an.quorum.remaining)} still needed)`,
+    );
+    if (an.quorum.projectedTotal !== null) {
+      const date =
+        an.quorum.quorumExpectedAt !== null
+          ? `, expected ${new Date(an.quorum.quorumExpectedAt * 1000).toISOString()}`
+          : `, not reached before the deadline`;
+      lines.push(
+        `- Trajectory: projected ${Math.round(an.quorum.projectedTotal)} by close ` +
+          `(${fmtPct(an.quorum.projectedProgress ?? 0)} of quorum${date})`,
+      );
+    }
+    lines.push(
+      `- Concentration: ${an.concentration.uniqueVoters} voters, ` +
+        `Gini ${an.concentration.gini !== null ? an.concentration.gini.toFixed(3) : "n/a"}, ` +
+        `Nakamoto ${an.concentration.nakamoto ?? "n/a"}, ` +
+        `top-1 share ${fmtPct(an.concentration.top1Share)}, ` +
+        `top-5 share ${fmtPct(an.concentration.top5Share)}`,
+    );
+    const o = an.outcome;
+    const flip =
+      o.flipPower !== null
+        ? `, ${Math.round(o.flipPower)} power to flip`
+        : "";
+    lines.push(
+      `- Outcome: ${o.leader ?? "undecided"}` +
+        (o.runnerUp ? ` leads ${o.runnerUp}` : "") +
+        ` by ${Math.round(o.margin)}${flip}`,
+    );
+    lines.push(``);
+  }
+
   lines.push(`## Risk flags (${a.riskFlags.length})`);
   lines.push(``);
   if (a.riskFlags.length === 0) {

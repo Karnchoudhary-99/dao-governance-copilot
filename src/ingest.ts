@@ -10,6 +10,7 @@ import {
   ProposalChoice,
   ProposalState,
   Vote,
+  parseAmount,
 } from "./types.js";
 
 const VALID_STATES: ProposalState[] = [
@@ -200,4 +201,74 @@ export function generateFixtures(count: number, seed = 42): Proposal[] {
     });
   }
   return out;
+}
+
+/**
+ * Generate a deterministic per-voter ballot list for a proposal, useful for
+ * demos and CLI experiments. Votes are scaled so each choice group's total
+ * roughly matches the proposal's `scores`; voting power is whale-skewed so
+ * concentration metrics stay interesting. Same (proposal, seed) pair always
+ * yields the same ballots.
+ */
+export function generateFixtureVotes(p: Proposal, seed = 42): Vote[] {
+  // Mix the proposal id into the seed so different proposals get different ballots.
+  let seedMix = seed >>> 0;
+  for (const ch of p.id) seedMix = (Math.imul(seedMix, 31) + ch.charCodeAt(0)) >>> 0;
+  const rand = mulberry32(seedMix);
+
+  const scoreKeys = Object.keys(p.scores);
+  const choiceWeights: { index: number; weight: number }[] =
+    scoreKeys.length > 0
+      ? scoreKeys.map((k) => ({
+          index: Number(k),
+          weight: Math.max(parseAmount(p.scores[Number(k)]), 1),
+        }))
+      : p.choices.map((c) => ({ index: c.index, weight: 1 }));
+  const weightTotal = choiceWeights.reduce((s, w) => s + w.weight, 0);
+
+  const pickChoice = (): number => {
+    let r = rand() * weightTotal;
+    for (const w of choiceWeights) {
+      r -= w.weight;
+      if (r <= 0) return w.index;
+    }
+    return choiceWeights[choiceWeights.length - 1].index;
+  };
+
+  const voterCount = 12 + Math.floor(rand() * 20);
+  const ballots: Vote[] = [];
+  for (let i = 0; i < voterCount; i++) {
+    // Guarantee every choice gets at least one ballot so group rescaling
+    // below always has something to work with.
+    const forced = i < choiceWeights.length ? choiceWeights[i].index : pickChoice();
+    // Heavy-tailed power: a few whales, many small voters.
+    const rawPower = 200 * (1 + 60 * Math.pow(rand(), 5));
+    const close = Math.min(p.end, NOW);
+    const createdAt =
+      close > p.start ? p.start + Math.floor(rand() * (close - p.start)) : p.start;
+    ballots.push({
+      voter: `0xfixture${String(i).padStart(3, "0")}`,
+      choice: forced,
+      votingPower: String(Math.max(1, Math.round(rawPower))),
+      createdAt,
+      ...(rand() < 0.3
+        ? { reason: "Voting in the interest of long-term protocol security." }
+        : {}),
+    });
+  }
+
+  // Rescale each choice group to match the proposal scores, keeping the
+  // whale skew inside each group.
+  const target = new Map<number, number>();
+  for (const w of choiceWeights) target.set(w.index, w.weight);
+  const groupTotal = new Map<number, number>();
+  for (const b of ballots) {
+    groupTotal.set(b.choice, (groupTotal.get(b.choice) ?? 0) + Number(b.votingPower));
+  }
+  for (const b of ballots) {
+    const total = groupTotal.get(b.choice) ?? 1;
+    const want = target.get(b.choice) ?? 0;
+    b.votingPower = String(Math.max(1, Math.round((Number(b.votingPower) / total) * want)));
+  }
+  return ballots;
 }

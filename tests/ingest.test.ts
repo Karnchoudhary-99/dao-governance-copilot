@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  generateFixtureVotes,
   generateFixtures,
   loadVotesFromFile,
   validateProposal,
@@ -101,5 +102,46 @@ describe("generateFixtures", () => {
       expect(() => validateProposal(JSON.parse(JSON.stringify(p)))).not.toThrow();
       expect(p.choices).toHaveLength(3);
     }
+  });
+});
+
+describe("generateFixtureVotes", () => {
+  it("is deterministic for the same proposal and seed", () => {
+    const [p] = generateFixtures(1, 42);
+    const a = generateFixtureVotes(p, 7);
+    const b = generateFixtureVotes(p, 7);
+    expect(a).toEqual(b);
+    expect(a.length).toBeGreaterThan(10);
+  });
+
+  it("differs across proposals and seeds", () => {
+    const [p, q] = generateFixtures(2, 42);
+    expect(generateFixtureVotes(p, 7)).not.toEqual(generateFixtureVotes(q, 7));
+    expect(generateFixtureVotes(p, 7)).not.toEqual(generateFixtureVotes(p, 8));
+  });
+
+  it("produces valid votes whose group totals track the proposal scores", () => {
+    const [p] = generateFixtures(1, 42);
+    const votes = generateFixtureVotes(p, 7);
+    const validIndexes = new Set(p.choices.map((c) => c.index));
+    const groupTotal = new Map<number, number>();
+    for (const v of votes) {
+      expect(validIndexes.has(v.choice)).toBe(true);
+      expect(Number(v.votingPower)).toBeGreaterThan(0);
+      expect(v.createdAt).toBeGreaterThanOrEqual(p.start);
+      groupTotal.set(v.choice, (groupTotal.get(v.choice) ?? 0) + Number(v.votingPower));
+    }
+    for (const k of Object.keys(p.scores)) {
+      const want = Number(p.scores[Number(k)]);
+      const got = groupTotal.get(Number(k)) ?? 0;
+      if (want > 0) {
+        expect(got / want).toBeGreaterThan(0.9);
+        expect(got / want).toBeLessThan(1.1);
+      }
+    }
+    // round-trip through the file loader
+    const path = join(tmpdir(), `votes-${Date.now()}.json`);
+    writeFileSync(path, JSON.stringify({ votes }));
+    expect(loadVotesFromFile(path)).toHaveLength(votes.length);
   });
 });

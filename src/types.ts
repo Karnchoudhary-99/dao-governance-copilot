@@ -17,6 +17,10 @@ export type ProposalState =
 /** Where the proposal lives / how it is voted on. */
 export type GovernanceSource = "snapshot" | "tally" | "onchain" | "custom";
 
+// Type-only import: analytics.ts needs runtime values from here, so this
+// direction must stay type-only to avoid a runtime module cycle.
+import type { VoteAnalytics } from "./analytics.js";
+
 /** A single ballot option (e.g. For / Against / Abstain). */
 export interface ProposalChoice {
   /** 1-based index matching on-chain vote choice. */
@@ -103,6 +107,11 @@ export interface ProposalAnalysis {
   quorumProgress: number;
   /** Winning choice label, null when no votes yet. */
   leadingChoice: string | null;
+  /**
+   * Vote-level analytics (quorum trajectory, concentration, flip analysis).
+   * Present only when a vote list was supplied to the analyzer.
+   */
+  analytics?: VoteAnalytics | null;
   generatedAt: number;
 }
 
