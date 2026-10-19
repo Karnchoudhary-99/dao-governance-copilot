@@ -3,9 +3,13 @@
   "version": "0.1.0",
   "description": "AI copilot for DAO governance: proposal analysis, voting insights, delegate tracking",
   "main": "dist/index.js",
+  "bin": {
+    "copilot": "dist/cli.js"
+  },
   "scripts": {
     "build": "tsc",
     "test": "vitest run",
+    "demo": "node dist/cli.js analyze-dir examples",
     "lint": "eslint src tests --ext .ts"
   },
   "license": "MIT",
