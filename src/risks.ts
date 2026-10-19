@@ -17,7 +17,7 @@ const TREASURY_PATTERNS = [
   /\bgrant(s)?\b.{0,30}\b(program|fund|round)\b/i,
 ];
 
-const UPGRADE_PATTERNS = [/\bupgrade\b/i, /\bmigrat(e|ion)\b/i, /\bdeploy\b.{0,30}\bcontract/i];
+const UPGRADE_PATTERNS = [/\bupgrad(e|ing)\b/i, /\bmigrat(e|ion|ing)\b/i, /\bdeploy\b.{0,30}\bcontract/i];
 const AUDIT_PATTERNS = [/\baudit(ed|ing)?\b/i, /\bsecurity review\b/i, /\bformal verification\b/i];
 const TIMELOCK_PATTERNS = [/\btimelock\b/i, /\bdelay\b.{0,20}\b(execution|upgrade)\b/i];
 
@@ -103,7 +103,9 @@ function quorumFlags(p: Proposal): RiskFlag[] {
   let total = 0;
   for (const s of Object.values(p.scores)) total += parseAmount(s);
   const ratio = total / quorum;
-  if (p.state === "active" && ratio < 0.25) {
+  // Only fire once voting has started — a fresh proposal with zero votes
+  // is not "at risk", it just opened.
+  if (p.state === "active" && total > 0 && ratio < 0.25) {
     flags.push({
       code: "quorum-at-risk",
       message: `Only ${(ratio * 100).toFixed(1)}% of quorum reached — proposal may fail to meet quorum.`,
