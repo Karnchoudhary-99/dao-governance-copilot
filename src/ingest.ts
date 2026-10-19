@@ -238,6 +238,9 @@ export function generateFixtureVotes(p: Proposal, seed = 42): Vote[] {
   const voterCount = 12 + Math.floor(rand() * 20);
   const ballots: Vote[] = [];
   for (let i = 0; i < voterCount; i++) {
+    // Guarantee every choice gets at least one ballot so group rescaling
+    // below always has something to work with.
+    const forced = i < choiceWeights.length ? choiceWeights[i].index : pickChoice();
     // Heavy-tailed power: a few whales, many small voters.
     const rawPower = 200 * (1 + 60 * Math.pow(rand(), 5));
     const close = Math.min(p.end, NOW);
@@ -245,7 +248,7 @@ export function generateFixtureVotes(p: Proposal, seed = 42): Vote[] {
       close > p.start ? p.start + Math.floor(rand() * (close - p.start)) : p.start;
     ballots.push({
       voter: `0xfixture${String(i).padStart(3, "0")}`,
-      choice: pickChoice(),
+      choice: forced,
       votingPower: String(Math.max(1, Math.round(rawPower))),
       createdAt,
       ...(rand() < 0.3
