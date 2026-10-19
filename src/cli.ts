@@ -15,6 +15,7 @@ import {
   scoreDelegates,
   VotesByProposal,
 } from "./delegates.js";
+import { buildDigestItems, renderDigest } from "./digests.js";
 import {
   generateFixtureVotes,
   generateFixtures,
@@ -30,6 +31,7 @@ function usage(): never {
       "  copilot analyze <proposal.json> [--votes <votes.json>] [--json]",
       "  copilot analyze-dir <proposals-dir> [--json]",
       "  copilot delegates <proposals-dir> [--votes-dir <dir>] [--top N]",
+      "  copilot digest <proposals-dir> [--closing-within <hours>] [--new-within <hours>] [--json]",
       "  copilot fixtures <out-dir> [--count N] [--seed S] [--votes]",
     ].join("\n"),
   );
@@ -103,6 +105,26 @@ async function main(): Promise<void> {
     for (const card of cards.slice(0, top)) {
       console.log(``);
       console.log(renderScorecard(card));
+    }
+    return;
+  }
+
+  if (cmd === "digest") {
+    const closingWithin = Number(getArg("--closing-within") ?? "48");
+    const newWithin = Number(getArg("--new-within") ?? "72");
+    const proposals = loadProposalsFromDir(target);
+    if (proposals.length === 0) {
+      console.error(`no .json proposals found in ${target}`);
+      process.exit(1);
+    }
+    const items = buildDigestItems(proposals, {
+      closingWithinHours: closingWithin,
+      newWithinHours: newWithin,
+    });
+    if (process.argv.includes("--json")) {
+      console.log(JSON.stringify(items, null, 2));
+    } else {
+      console.log(renderDigest(items));
     }
     return;
   }
