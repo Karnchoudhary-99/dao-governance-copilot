@@ -1,0 +1,256 @@
+{
+  "votes": [
+    {
+      "voter": "0xwhale0",
+      "choice": 1,
+      "votingPower": "120936",
+      "createdAt": 1768262593
+    },
+    {
+      "voter": "0xwhale1",
+      "choice": 1,
+      "votingPower": "161716",
+      "createdAt": 1768125323,
+      "reason": "Voting in the interest of long-term protocol security."
+    },
+    {
+      "voter": "0xwhale2",
+      "choice": 1,
+      "votingPower": "164266",
+      "createdAt": 1768069301,
+      "reason": "Voting in the interest of long-term protocol security."
+    },
+    {
+      "voter": "0xdelegate0",
+      "choice": 1,
+      "votingPower": "32451",
+      "createdAt": 1768052990,
+      "reason": "Voting in the interest of long-term protocol security."
+    },
+    {
+      "voter": "0xdelegate1",
+      "choice": 1,
+      "votingPower": "17384",
+      "createdAt": 1768079654
+    },
+    {
+      "voter": "0xdelegate2",
+      "choice": 2,
+      "votingPower": "15921",
+      "createdAt": 1768051285,
+      "reason": "Voting in the interest of long-term protocol security."
+    },
+    {
+      "voter": "0xdelegate3",
+      "choice": 1,
+      "votingPower": "12949",
+      "createdAt": 1768147276
+    },
+    {
+      "voter": "0xdelegate4",
+      "choice": 2,
+      "votingPower": "10385",
+      "createdAt": 1768148837
+    },
+    {
+      "voter": "0xdelegate5",
+      "choice": 2,
+      "votingPower": "29763",
+      "createdAt": 1768167834
+    },
+    {
+      "voter": "0xdelegate6",
+      "choice": 1,
+      "votingPower": "34484",
+      "createdAt": 1768047024,
+      "reason": "Voting in the interest of long-term protocol security."
+    },
+    {
+      "voter": "0xdelegate7",
+      "choice": 1,
+      "votingPower": "21610",
+      "createdAt": 1768023683
+    },
+    {
+      "voter": "0xdelegate8",
+      "choice": 1,
+      "votingPower": "19807",
+      "createdAt": 1768125977
+    },
+    {
+      "voter": "0xdelegate9",
+      "choice": 1,
+      "votingPower": "30505",
+      "createdAt": 1768088878,
+      "reason": "Voting in the interest of long-term protocol security."
+    },
+    {
+      "voter": "0xdelegate10",
+      "choice": 1,
+      "votingPower": "12441",
+      "createdAt": 1768245424,
+      "reason": "Voting in the interest of long-term protocol security."
+    },
+    {
+      "voter": "0xdelegate11",
+      "choice": 1,
+      "votingPower": "14092",
+      "createdAt": 1768090524,
+      "reason": "Voting in the interest of long-term protocol security."
+    },
+    {
+      "voter": "0xvoter0",
+      "choice": 2,
+      "votingPower": "2895",
+      "createdAt": 1768147268
+    },
+    {
+      "voter": "0xvoter1",
+      "choice": 2,
+      "votingPower": "2793",
+      "createdAt": 1768031461
+    },
+    {
+      "voter": "0xvoter2",
+      "choice": 2,
+      "votingPower": "2772",
+      "createdAt": 1768258182
+    },
+    {
+      "voter": "0xvoter3",
+      "choice": 2,
+      "votingPower": "2580",
+      "createdAt": 1768260066
+    },
+    {
+      "voter": "0xvoter4",
+      "choice": 1,
+      "votingPower": "3365",
+      "createdAt": 1768138721,
+      "reason": "Voting in the interest of long-term protocol security."
+    },
+    {
+      "voter": "0xvoter5",
+      "choice": 1,
+      "votingPower": "3035",
+      "createdAt": 1768203056
+    },
+    {
+      "voter": "0xvoter6",
+      "choice": 1,
+      "votingPower": "2451",
+      "createdAt": 1768115582
+    },
+    {
+      "voter": "0xvoter7",
+      "choice": 1,
+      "votingPower": "3085",
+      "createdAt": 1768083969,
+      "reason": "Voting in the interest of long-term protocol security."
+    },
+    {
+      "voter": "0xvoter8",
+      "choice": 1,
+      "votingPower": "533",
+      "createdAt": 1768253585
+    },
+    {
+      "voter": "0xvoter9",
+      "choice": 1,
+      "votingPower": "2707",
+      "createdAt": 1768166359
+    },
+    {
+      "voter": "0xvoter10",
+      "choice": 2,
+      "votingPower": "3009",
+      "createdAt": 1768074726
+    },
+    {
+      "voter": "0xvoter11",
+      "choice": 1,
+      "votingPower": "2775",
+      "createdAt": 1768167838
+    },
+    {
+      "voter": "0xvoter12",
+      "choice": 2,
+      "votingPower": "987",
+      "createdAt": 1768136263
+    },
+    {
+      "voter": "0xvoter13",
+      "choice": 1,
+      "votingPower": "1063",
+      "createdAt": 1768056628
+    },
+    {
+      "voter": "0xvoter14",
+      "choice": 1,
+      "votingPower": "3515",
+      "createdAt": 1768176993
+    },
+    {
+      "voter": "0xvoter15",
+      "choice": 1,
+      "votingPower": "2633",
+      "createdAt": 1768256808
+    },
+    {
+      "voter": "0xvoter16",
+      "choice": 1,
+      "votingPower": "1304",
+      "createdAt": 1768213879
+    },
+    {
+      "voter": "0xvoter17",
+      "choice": 1,
+      "votingPower": "1165",
+      "createdAt": 1768128407
+    },
+    {
+      "voter": "0xvoter18",
+      "choice": 1,
+      "votingPower": "1131",
+      "createdAt": 1768117994
+    },
+    {
+      "voter": "0xvoter19",
+      "choice": 1,
+      "votingPower": "1098",
+      "createdAt": 1768046543,
+      "reason": "Voting in the interest of long-term protocol security."
+    },
+    {
+      "voter": "0xvoter20",
+      "choice": 2,
+      "votingPower": "875",
+      "createdAt": 1768264181,
+      "reason": "Voting in the interest of long-term protocol security."
+    },
+    {
+      "voter": "0xvoter21",
+      "choice": 1,
+      "votingPower": "1111",
+      "createdAt": 1768134130
+    },
+    {
+      "voter": "0xvoter22",
+      "choice": 1,
+      "votingPower": "1789",
+      "createdAt": 1768212762
+    },
+    {
+      "voter": "0xvoter23",
+      "choice": 1,
+      "votingPower": "3300",
+      "createdAt": 1768214589
+    },
+    {
+      "voter": "0xvoter24",
+      "choice": 1,
+      "votingPower": "2469",
+      "createdAt": 1768141727
+    }
+  ]
+}
